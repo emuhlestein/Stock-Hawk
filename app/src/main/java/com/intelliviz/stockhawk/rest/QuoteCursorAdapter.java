@@ -4,16 +4,17 @@ import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
 import android.graphics.Typeface;
+import android.net.Uri;
 import android.os.Build;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.intelliviz.stockhawk.R;
-import com.intelliviz.stockhawk.data.QuoteColumns;
-import com.intelliviz.stockhawk.data.QuoteProvider;
+import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.touch_helper.ItemTouchHelperAdapter;
 import com.intelliviz.stockhawk.touch_helper.ItemTouchHelperViewHolder;
 
@@ -77,8 +78,10 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
     public void onItemDismiss(int position) {
         Cursor c = getCursor();
         c.moveToPosition(position);
-        String symbol = c.getString(c.getColumnIndex(QuoteColumns.SYMBOL));
-        mContext.getContentResolver().delete(QuoteProvider.Quotes.withSymbol(symbol), null, null);
+        String symbol = c.getString(c.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL));
+        Uri uri = StockQuoteContract.QuotesEntry.CONTENT_URI;
+        uri = Uri.withAppendedPath(uri, "" + symbol);
+        mContext.getContentResolver().delete(uri, null, null);
         notifyItemRemoved(position);
     }
 
@@ -99,6 +102,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
             symbol.setTypeface(robotoLight);
             bidPrice = (TextView) itemView.findViewById(R.id.bid_price);
             change = (TextView) itemView.findViewById(R.id.change);
+            itemView.setOnClickListener(this);
         }
 
         @Override
@@ -113,7 +117,7 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
 
         @Override
         public void onClick(View v) {
-
+            Toast.makeText(mContext, "clicked", Toast.LENGTH_SHORT).show();
         }
     }
 }

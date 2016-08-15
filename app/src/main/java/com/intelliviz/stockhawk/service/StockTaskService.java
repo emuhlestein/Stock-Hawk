@@ -11,8 +11,7 @@ import android.util.Log;
 import com.google.android.gms.gcm.GcmNetworkManager;
 import com.google.android.gms.gcm.GcmTaskService;
 import com.google.android.gms.gcm.TaskParams;
-import com.intelliviz.stockhawk.data.QuoteColumns;
-import com.intelliviz.stockhawk.data.QuoteProvider;
+import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.rest.Utils;
 import com.squareup.okhttp.OkHttpClient;
 import com.squareup.okhttp.Request;
@@ -68,8 +67,8 @@ public class StockTaskService extends GcmTaskService {
         }
         if (params.getTag().equals("init") || params.getTag().equals("periodic")) {
             isUpdate = true;
-            initQueryCursor = mContext.getContentResolver().query(QuoteProvider.Quotes.CONTENT_URI,
-                    new String[]{"Distinct " + QuoteColumns.SYMBOL}, null,
+            initQueryCursor = mContext.getContentResolver().query(StockQuoteContract.QuotesEntry.CONTENT_URI,
+                    new String[]{"Distinct " + StockQuoteContract.QuotesEntry.COLUMN_SYMBOL}, null,
                     null, null);
             if (initQueryCursor.getCount() == 0 || initQueryCursor == null) {
                 // Init task. Populates DB with quotes for the symbols seen below
@@ -121,11 +120,11 @@ public class StockTaskService extends GcmTaskService {
                     ContentValues contentValues = new ContentValues();
                     // update ISCURRENT to 0 (false) so new data is current
                     if (isUpdate) {
-                        contentValues.put(QuoteColumns.ISCURRENT, 0);
-                        mContext.getContentResolver().update(QuoteProvider.Quotes.CONTENT_URI, contentValues,
+                        contentValues.put(StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT, 0);
+                        mContext.getContentResolver().update(StockQuoteContract.QuotesEntry.CONTENT_URI, contentValues,
                                 null, null);
                     }
-                    mContext.getContentResolver().applyBatch(QuoteProvider.AUTHORITY,
+                    mContext.getContentResolver().applyBatch(StockQuoteContract.CONTENT_AUTHORITY,
                             Utils.quoteJsonToContentVals(getResponse));
                 } catch (RemoteException | OperationApplicationException e) {
                     Log.e(LOG_TAG, "Error applying batch insert", e);

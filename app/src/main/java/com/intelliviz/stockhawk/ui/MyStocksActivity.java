@@ -1,5 +1,7 @@
 package com.intelliviz.stockhawk.ui;
 
+import android.database.Cursor;
+import android.database.DatabaseUtils;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
@@ -10,12 +12,13 @@ import android.view.Menu;
 import android.view.MenuItem;
 
 import com.intelliviz.stockhawk.R;
-import com.intelliviz.stockhawk.data.QuoteProvider;
+import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.rest.Utils;
 
 
-public class MyStocksActivity extends AppCompatActivity {
+public class MyStocksActivity extends AppCompatActivity implements StockListFragment.OnStockSelectListener {
     private static final String LIST_FRAG_TAG = "list frag tag";
+    private static final String STOCK_FRAG_TAG = "stock frag tag";
     private CharSequence mTitle;
 
     @Override
@@ -65,16 +68,46 @@ public class MyStocksActivity extends AppCompatActivity {
         int id = item.getItemId();
 
         //noinspection SimplifiableIfStatement
-        if (id == R.id.action_settings) {
-            return true;
-        }
+        switch (id) {
+            case R.id.action_settings:
+                Cursor cursor = getContentResolver().query(StockQuoteContract.QuotesEntry.CONTENT_URI, null, null, null, null);
+                DatabaseUtils.dumpCursor(cursor);
+                if (cursor != null) {
+                    cursor.close();
+                }
+                return true;
+            case android.R.id.home:
+                getSupportFragmentManager().popBackStack();
+                return true;
 
-        if (id == R.id.action_change_units) {
-            // this is for changing stock changes from percent value to dollar value
-            Utils.showPercent = !Utils.showPercent;
-            this.getContentResolver().notifyChange(QuoteProvider.Quotes.CONTENT_URI, null);
+            case R.id.action_change_units:
+                // this is for changing stock changes from percent value to dollar value
+                Utils.showPercent = !Utils.showPercent;
+                getContentResolver().notifyChange(StockQuoteContract.QuotesEntry.CONTENT_URI, null);
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onSelectStock(String symbol, String data) {
+        // parse data
+        String[] tokens = data.split("\n");
+        for(String token : tokens) {
+            token.split(",");
+
+        }
+
+        FragmentManager fm = getSupportFragmentManager();
+        StockGraphFragment fragment;
+
+
+        fragment = StockGraphFragment.newInstance(symbol, data);
+        FragmentTransaction ft = fm.beginTransaction();
+        ft.replace(R.id.fragment_holder, fragment);
+        ft.addToBackStack(null);
+        ft.commit();
+
+        // launch fragment to show data in graph
     }
 }

@@ -2,15 +2,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.intelliviz.stockhawk" >
 
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
+    <uses-permission android:name="android.permission.WAKE_LOCK" />
+    <uses-permission android:name="android.permission.AUTHENTICATE_ACCOUNTS"/>
+    <uses-permission android:name="android.permission.READ_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.WRITE_SYNC_SETTINGS"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
-        android:theme="@style/AppTheme" >
-
-        <uses-permission android:name="android.permission.INTERNET" />
-        <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
-        <uses-permission android:name="android.permission.WAKE_LOCK" />
+        android:theme="@style/AppTheme"
+        android:supportsRtl="true">
 
         <permission
             android:name="com.google.android.gcm.demo.permission.C2D_MESSAGE"
@@ -34,11 +39,10 @@
                 <action android:name="com.google.android.gms.gcm.ACTION_TASK_READY"/>
             </intent-filter>
         </service>
-        <service android:name="com.intelliviz.stockhawk.service.StockIntentService" />
         <provider
-            android:name="com.intelliviz.stockhawk.data.provider.QuoteProvider"
-            android:authorities="com.intelliviz.stockhawk.data.QuoteProvider"
-            android:exported="false"/>
+            android:name="com.intelliviz.stockhawk.data.StockQuoteProvider"
+            android:authorities="com.intelliviz.stockhawk.data.StockQuoteProvider"
+            android:exported="true"/>
         <receiver android:name=".widget.WidgetProvider" >
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -46,10 +50,31 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/widget_provider" />
+                android:resource="@xml/stock_list_widget_info" />
         </receiver>
         <service android:name=".widget.WidgetService"
             android:permission="android.permission.BIND_REMOTEVIEWS"/>
+        <service android:name=".widget.StockRemoteViewsService"
+            android:permission="android.permission.BIND_REMOTEVIEWS">
+
+        </service>
+        <service
+            android:name="com.intelliviz.stockhawk.syncadapter.StockSyncService"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="android.content.SyncAdapter"/>
+            </intent-filter>
+            <meta-data android:name="android.content.SyncAdapter"
+                android:resource="@xml/syncadapter" />
+        </service>
+        <service
+            android:name="com.intelliviz.stockhawk.syncadapter.StockAuthenticationService">
+            <intent-filter>
+                <action android:name="android.accounts.AccountAuthenticator"/>
+            </intent-filter>
+            <meta-data android:name="android.accounts.AccountAuthenticator"
+                android:resource="@xml/accountauth" />
+        </service>
     </application>
 
 </manifest>

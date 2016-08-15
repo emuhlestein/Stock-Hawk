@@ -11,7 +11,7 @@ import java.util.List;
 /**
  * Created by edm on 6/14/2016.
  */
-// RemoteVIewFactoryh acts as adapter between list and data.
+// RemoteViewFactory acts as adapter between list and data.
 public class WidgetDataProvider implements RemoteViewsService.RemoteViewsFactory {
     List<String> mCollection = new ArrayList<>();
     Context mContext;

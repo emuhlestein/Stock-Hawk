@@ -8,10 +8,11 @@
         android:background="#88ffffff" >
 
         <TextView
+            android:id="@+id/stock_text"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:gravity="center"
-            android:text="Hello Widget"
+            android:text="@string/hello_widget"
             android:textAppearance="?android:attr/textAppearanceLarge"
             android:textColor="#fff"
             android:textStyle="bold" />

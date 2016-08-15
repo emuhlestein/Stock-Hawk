@@ -14,4 +14,13 @@
 
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string name="no_stock_info">No stock information available</string>
+    <string name="no_stock_info_no_network">No stock information available.\nThe network is not available.</string>
+    <string name="pref_location_status_key" translatable="false">location_status</string>
+    <string name="empty_stock_list_server_down">No stock information.\nThe server is not returning any data</string>
+    <string name="empty_stock_list_server_error">No stock information.\nThe server is not returning valid data.</string>
+    <string name="hello_widget">Hello Widget</string>
+    <string name="add_a_stock">Add a stock</string>
+    <string name="widget_header">Widget Header</string>
+
 </resources>
