@@ -200,7 +200,7 @@ public class StockListFragment extends Fragment implements
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                syncStockData();
+                Utils.updateStocks(getContext());
             }
         });
 

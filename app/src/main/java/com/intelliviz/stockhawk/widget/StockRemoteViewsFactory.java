@@ -4,11 +4,14 @@ import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.database.Cursor;
+import android.net.Uri;
 import android.widget.RemoteViews;
 import android.widget.RemoteViewsService;
 
-import com.intelliviz.stockhawk.R;;
+import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
+
+;
 
 /**
  * Created by edm on 7/13/2016.
@@ -22,7 +25,6 @@ public class StockRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
         mContext = context;
         mCr = context.getContentResolver();
     }
-
 
     @Override
     public void onCreate() {
@@ -51,6 +53,7 @@ public class StockRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
     @Override
     public RemoteViews getViewAt(int position) {
         mCursor.moveToPosition(position);
+        int count = mCursor.getCount();
 
         int symbolIndex = mCursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
         int bidIndex = mCursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_BID_PRICE);
@@ -63,9 +66,13 @@ public class StockRemoteViewsFactory implements RemoteViewsService.RemoteViewsFa
         rv.setTextViewText(R.id.stockNameTextView, symbol);
         rv.setTextViewText(R.id.stockQuoteTextView, bid);
 
-        Intent fillInIntent = new Intent();
-        //fillInIntent.setData();
-        //rv.setOnClickFillInIntent();
+        Intent fillIntent = new Intent();
+        Uri uri = Uri.withAppendedPath(StockQuoteContract.QuotesEntry.CONTENT_URI, symbol);
+        fillIntent.setData(uri);
+
+        rv.setOnClickFillInIntent(R.id.stockNameTextView, fillIntent);
+        rv.setOnClickFillInIntent(R.id.stockQuoteTextView, fillIntent);
+
         return rv;
     }
 

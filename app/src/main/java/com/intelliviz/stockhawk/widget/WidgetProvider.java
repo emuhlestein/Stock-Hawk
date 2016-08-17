@@ -1,6 +1,7 @@
 package com.intelliviz.stockhawk.widget;
 
 import android.annotation.TargetApi;
+import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.ComponentName;
@@ -14,6 +15,8 @@ import android.widget.RemoteViews;
 
 import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
+import com.intelliviz.stockhawk.syncadapter.StockSyncAdapter;
+import com.intelliviz.stockhawk.ui.MyStocksActivity;
 
 import java.io.UnsupportedEncodingException;
 import java.net.URLEncoder;
@@ -29,15 +32,18 @@ public class WidgetProvider extends AppWidgetProvider {
         for(int i = 0; i < N; i++) {
             int appWidgetId = appWidgetIds[i];
 
-            Intent intent = new Intent(context, StockRemoteViewsService.class);
-            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
-
             RemoteViews views = new RemoteViews(context.getPackageName(),
                     R.layout.stock_collection_widget_layout);
 
-            views.setRemoteAdapter(R.id.collectionWidgetListView, intent);
+            // Bind this widget to a remove view service
+            Intent intent = new Intent(context, StockRemoteViewsService.class);
+            intent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            views.setRemoteAdapter(appWidgetId, R.id.collectionWidgetListView, intent);
+            Intent templateIntent = new Intent(context, MyStocksActivity.class);
+            templateIntent.putExtra(AppWidgetManager.EXTRA_APPWIDGET_ID, appWidgetId);
+            PendingIntent templatePendingIntent = PendingIntent.getActivity(context, 0, templateIntent, PendingIntent.FLAG_UPDATE_CURRENT);
+            views.setPendingIntentTemplate(R.id.collectionWidgetListView, templatePendingIntent);
 
-            //Intent templateIntent = new Intent(context, )
             appWidgetManager.updateAppWidget(appWidgetId, views);
         }
     }
@@ -99,6 +105,10 @@ public class WidgetProvider extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent) {
         super.onReceive(context, intent);
+
+        if(StockSyncAdapter.STOCKS_REFRESHED.equals(intent.getAction())) {
+            updateStocks(context);
+        }
     }
 
     @Override
@@ -129,5 +139,12 @@ public class WidgetProvider extends AppWidgetProvider {
     private static void setRemoteAdapterV11(Context context, @NonNull final RemoteViews views) {
         views.setRemoteAdapter(0, R.id.widget_list,
                 new Intent(context, WidgetService.class));
+    }
+
+    public void updateStocks(Context context) {
+        ComponentName thisWidget = new ComponentName(context, WidgetProvider.class);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(context);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(thisWidget);
+        updateStockQuotes(context, appWidgetManager, appWidgetIds);
     }
 }

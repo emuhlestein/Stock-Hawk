@@ -3,6 +3,7 @@ package com.intelliviz.stockhawk.rest;
 import android.content.ContentProviderOperation;
 import android.content.ContentValues;
 import android.content.Context;
+import android.content.Intent;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
@@ -331,6 +332,10 @@ public class Utils {
 
         NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
         return activeNetwork != null && activeNetwork.isConnectedOrConnecting();
+    }
+
+    public static void updateStocks(Context context) {
+        context.sendBroadcast(new Intent(StockSyncAdapter.STOCKS_REFRESHED));
     }
 
     @SuppressWarnings("ResourceType")

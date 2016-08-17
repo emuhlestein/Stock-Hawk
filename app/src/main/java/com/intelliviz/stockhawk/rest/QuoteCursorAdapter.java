@@ -1,5 +1,7 @@
 package com.intelliviz.stockhawk.rest;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.content.Context;
 import android.database.Cursor;
 import android.graphics.Color;
@@ -17,6 +19,7 @@ import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.touch_helper.ItemTouchHelperAdapter;
 import com.intelliviz.stockhawk.touch_helper.ItemTouchHelperViewHolder;
+import com.intelliviz.stockhawk.widget.WidgetProvider;
 
 /**
  * Created by sam_chordas on 10/6/15.
@@ -83,6 +86,12 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
         uri = Uri.withAppendedPath(uri, "" + symbol);
         mContext.getContentResolver().delete(uri, null, null);
         notifyItemRemoved(position);
+        Utils.updateStocks(mContext);
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(mContext);
+        ComponentName appWidget = new ComponentName(mContext, WidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(appWidget);
+
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.collectionWidgetListView);
     }
 
     @Override

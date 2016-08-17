@@ -1,7 +1,9 @@
 package com.intelliviz.stockhawk.syncadapter;
 
 import android.accounts.Account;
+import android.appwidget.AppWidgetManager;
 import android.content.AbstractThreadedSyncAdapter;
+import android.content.ComponentName;
 import android.content.ContentProviderClient;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -17,6 +19,7 @@ import android.util.Log;
 import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.rest.Utils;
+import com.intelliviz.stockhawk.widget.WidgetProvider;
 
 import org.json.JSONException;
 
@@ -38,6 +41,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
     public static final String EXTRA_COMMAND = "command";
     public static final String EXTRA_STOCK = "stock";
     public static final int SYNC_INTERVAL = 60;
+    public static final String STOCKS_REFRESHED = "com.intelliviz.stocks.STOCKS_REFRESHED";
     private static final String TAG = StockSyncAdapter.class.getSimpleName();
     private ContentResolver mContentResolver;
     private StringBuilder mStoredSymbols = new StringBuilder();
@@ -224,6 +228,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 data = loadDataFromUrl(urlString);
                 try {
                     String result = Utils.addStocksToDB(getContext(), data);
+                    Utils.updateStocks(this.getContext());
                     if(result == null) {
                         // stock not found
                         setLocationStatus(getContext(), LOCATION_STATUS_STOCK_NOT_FOUND);
@@ -233,6 +238,12 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                     setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
                     return;
                 }
+
+                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getContext());
+                ComponentName appWidget = new ComponentName(getContext(), WidgetProvider.class);
+                int[] appWidgetIds = appWidgetManager.getAppWidgetIds(appWidget);
+
+                appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.collectionWidgetListView);
                 /*
                 try {
                     mContentResolver.applyBatch(StockQuoteContract.CONTENT_AUTHORITY,
@@ -244,6 +255,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 }
                 */
             } else {
+
                 cursor.close();
             }
         }

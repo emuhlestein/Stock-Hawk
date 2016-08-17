@@ -3,9 +3,6 @@ package com.intelliviz.stockhawk.touch_helper;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
 
-import com.intelliviz.stockhawk.touch_helper.ItemTouchHelperAdapter;
-import com.intelliviz.stockhawk.touch_helper.ItemTouchHelperViewHolder;
-
 /**
  * Created by sam_chordas on 10/6/15.
  * credit to Paul Burke (ipaulpro)
