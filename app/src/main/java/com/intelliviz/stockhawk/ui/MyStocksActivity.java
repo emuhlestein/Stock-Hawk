@@ -1,5 +1,7 @@
 package com.intelliviz.stockhawk.ui;
 
+import android.appwidget.AppWidgetManager;
+import android.content.ComponentName;
 import android.database.Cursor;
 import android.database.DatabaseUtils;
 import android.os.Bundle;
@@ -14,6 +16,7 @@ import android.view.MenuItem;
 import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.rest.Utils;
+import com.intelliviz.stockhawk.widget.WidgetProvider;
 
 
 public class MyStocksActivity extends AppCompatActivity implements StockListFragment.OnStockSelectListener {
@@ -25,6 +28,13 @@ public class MyStocksActivity extends AppCompatActivity implements StockListFrag
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_my_stocks);
+
+
+        AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(this);
+        ComponentName appWidget = new ComponentName(this, WidgetProvider.class);
+        int[] appWidgetIds = appWidgetManager.getAppWidgetIds(appWidget);
+
+        appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.collectionWidgetListView);
 
         FragmentManager fm = getSupportFragmentManager();
         Fragment fragment;

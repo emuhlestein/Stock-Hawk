@@ -27,9 +27,10 @@ public class StockQuoteProvider extends ContentProvider {
     private static final String TAG = StockQuoteProvider.class.getSimpleName();
     private SqliteHelper mSqliteHelper;
     private static final String DBASE_NAME = "quotes";
-    private static final int DBASE_VERSION = 1;
+    private static final int DBASE_VERSION = 3;
     private static final int QUOTES_LIST = 101;
     private static final int QUOTES_ID = 102;
+    private static final int STATUS_ID = 201;
 
     private static UriMatcher sUriMatcher;
 
@@ -41,6 +42,9 @@ public class StockQuoteProvider extends ContentProvider {
 
         // a particular movie
         sUriMatcher.addURI(StockQuoteContract.CONTENT_AUTHORITY, StockQuoteContract.PATH_QUOTES + "/*", QUOTES_ID);
+
+        // status
+        sUriMatcher.addURI(StockQuoteContract.CONTENT_AUTHORITY, StockQuoteContract.PATH_STATUS, STATUS_ID);
     }
 
     @NonNull
@@ -110,6 +114,10 @@ public class StockQuoteProvider extends ContentProvider {
                 sqLiteQueryBuilder.appendWhere(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL +
                         "=" + uri.getLastPathSegment());
                 break;
+            case STATUS_ID:
+                // get a particular quote: "status/#"
+                sqLiteQueryBuilder.setTables(StockQuoteContract.StatusEntry.TABLE_NAME);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown uri");
         }
@@ -129,6 +137,8 @@ public class StockQuoteProvider extends ContentProvider {
                 return StockQuoteContract.QuotesEntry.CONTENT_TYPE;
             case QUOTES_ID:
                 return StockQuoteContract.QuotesEntry.CONTENT_ITEM_TYPE;
+            case STATUS_ID:
+                return StockQuoteContract.StatusEntry.CONTENT_ITEM_TYPE;
             default:
                 throw new IllegalArgumentException("Unknown uri");
         }
@@ -217,6 +227,10 @@ public class StockQuoteProvider extends ContentProvider {
                 rowsUpdated = db.update(StockQuoteContract.QuotesEntry.TABLE_NAME,
                         values, selection, selectionArgs);
                 break;
+            case STATUS_ID:
+                rowsUpdated = db.update(StockQuoteContract.StatusEntry.TABLE_NAME,
+                        values, null, null);
+                break;
             default:
                 throw new IllegalArgumentException("Unknown URI " + uri);
         }
@@ -247,6 +261,16 @@ public class StockQuoteProvider extends ContentProvider {
 
 
             db.execSQL(sql);
+
+            // create the state table
+            sql = "CREATE TABLE " + StockQuoteContract.StatusEntry.TABLE_NAME +
+                    " ( " + StockQuoteContract.StatusEntry._ID + " INTEGER NOT NULL, " +
+                    StockQuoteContract.StatusEntry.COLUMN_STATUS + " INTEGER NOT NULL);";
+
+            db.execSQL(sql);
+
+            String ROW = "INSERT INTO " + StockQuoteContract.StatusEntry.TABLE_NAME + " Values ('0', '0');";
+            db.execSQL(ROW);
         }
 
         @Override

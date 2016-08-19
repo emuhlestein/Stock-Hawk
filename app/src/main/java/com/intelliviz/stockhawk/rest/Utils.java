@@ -1,6 +1,7 @@
 package com.intelliviz.stockhawk.rest;
 
 import android.content.ContentProviderOperation;
+import android.content.ContentResolver;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
@@ -8,6 +9,7 @@ import android.database.Cursor;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.net.Uri;
+import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.util.Log;
 
@@ -80,7 +82,6 @@ public class Utils {
         Uri uri = context.getContentResolver().insert(StockQuoteContract.QuotesEntry.CONTENT_URI, values);
         return uri.getLastPathSegment();
     }
-
 
     public static ArrayList getJsonToHistoricVals(String JSON) {
         ArrayList<String> contentList = new ArrayList<>();
@@ -343,5 +344,21 @@ public class Utils {
     int getLoctionStatus(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getInt(context.getString(R.string.pref_location_status_key), StockSyncAdapter.LOCATION_STATUS_UNKNOWN);
+    }
+
+    public static void forceSyncUpdate(Context context) {
+        Bundle bundle = new Bundle();
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_EXPEDITED, true);
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_FORCE, true);
+        bundle.putBoolean(ContentResolver.SYNC_EXTRAS_MANUAL, true);
+        ContentResolver.requestSync(null, StockQuoteContract.CONTENT_AUTHORITY, bundle);
+    }
+
+    public static void updateSyncStatus(Context context, int status) {
+        ContentValues values = new ContentValues();
+        values.put(StockQuoteContract.StatusEntry.COLUMN_STATUS, status);
+
+        Uri uri = StockQuoteContract.StatusEntry.CONTENT_URI;
+        context.getContentResolver().update(uri, values, null, null);
     }
 }

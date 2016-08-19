@@ -52,11 +52,13 @@ public class StockListFragment extends Fragment implements
     private CharSequence mTitle;
     private Intent mServiceIntent;
     private static final int STOCK_LOADER_ID = 0;
+    public static final int STATUS_LOADER_ID = 1;
     private QuoteCursorAdapter mCursorAdapter;
     private ItemTouchHelper mItemTouchHelper;
     private boolean mIsConnected;
     private Account mAccount;
     private OnStockSelectListener mListener;
+
 
     @Bind(R.id.empty_view) TextView mEmptyView;
     @Bind(R.id.recycler_view) RecyclerView mRecyclerView;
@@ -124,6 +126,7 @@ public class StockListFragment extends Fragment implements
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
         getLoaderManager().initLoader(STOCK_LOADER_ID, null, this);
+        getLoaderManager().initLoader(STATUS_LOADER_ID, null, this);
 
         mCursorAdapter = new QuoteCursorAdapter(getContext(), null);
         mRecyclerView.addOnItemTouchListener(new RecyclerViewItemClickListener(getContext(),
@@ -200,10 +203,9 @@ public class StockListFragment extends Fragment implements
         mSwipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
-                Utils.updateStocks(getContext());
+                Utils.forceSyncUpdate(getContext());
             }
         });
-
 
         return view;
     }
@@ -223,34 +225,59 @@ public class StockListFragment extends Fragment implements
     @Override
     public Loader<Cursor> onCreateLoader(int id, Bundle args) {
         // This narrows the return to only the stocks that are most current.
-        return new CursorLoader(getContext(), StockQuoteContract.QuotesEntry.CONTENT_URI,
-                new String[]{StockQuoteContract.QuotesEntry._ID, StockQuoteContract.QuotesEntry.COLUMN_SYMBOL,
-                        StockQuoteContract.QuotesEntry.COLUMN_BID_PRICE, StockQuoteContract.QuotesEntry.COLUMN_PERCENT_CHANGE,
-                        StockQuoteContract.QuotesEntry.COLUMN_CHANGE, StockQuoteContract.QuotesEntry.COLUMN_ISUP},
-                StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT + " = ?",
-                new String[]{"1"},
-                null);
+        Loader<Cursor> loader = null;
+        if(STOCK_LOADER_ID == id) {
+            loader = new CursorLoader(getContext(), StockQuoteContract.QuotesEntry.CONTENT_URI,
+                    new String[]{StockQuoteContract.QuotesEntry._ID, StockQuoteContract.QuotesEntry.COLUMN_SYMBOL,
+                            StockQuoteContract.QuotesEntry.COLUMN_BID_PRICE, StockQuoteContract.QuotesEntry.COLUMN_PERCENT_CHANGE,
+                            StockQuoteContract.QuotesEntry.COLUMN_CHANGE, StockQuoteContract.QuotesEntry.COLUMN_ISUP},
+                    StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT + " = ?",
+                    new String[]{"1"},
+                    null);
+        } else if(STATUS_LOADER_ID == id) {
+            loader =  new CursorLoader(getContext(), StockQuoteContract.StatusEntry.CONTENT_URI,
+                    null,
+                    null,
+                    null,
+                    null);
+        }
+
+        return loader;
     }
 
     @Override
-    public void onLoadFinished(Loader<Cursor> loader, Cursor data) {
-        if(data.moveToFirst()) {
-            mEmptyView.setVisibility(View.GONE);
-            mRecyclerView.setVisibility(View.VISIBLE);
-            int index = data.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
-            String str = data.getString(index);
-            while (data.moveToNext()) {
-                index = data.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
-                str = data.getString(index);
-                Log.d(TAG, "Stock: " + str);
+    public void onLoadFinished(Loader<Cursor> loader, Cursor cursor) {
+        if(loader.getId() == STOCK_LOADER_ID) {
+            if (cursor.moveToFirst()) {
+                mEmptyView.setVisibility(View.GONE);
+                mRecyclerView.setVisibility(View.VISIBLE);
+                int index = cursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
+                String str = cursor.getString(index);
+                while (cursor.moveToNext()) {
+                    index = cursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
+                    str = cursor.getString(index);
+                    Log.d(TAG, "Stock: " + str);
+                }
+            } else {
+                mEmptyView.setVisibility(View.VISIBLE);
+                mRecyclerView.setVisibility(View.GONE);
+                updateEmptyView();
             }
-        } else {
-            mEmptyView.setVisibility(View.VISIBLE);
-            mRecyclerView.setVisibility(View.GONE);
-            updateEmptyView();
+            mCursorAdapter.swapCursor(cursor);
+        } else if(loader.getId() == STATUS_LOADER_ID) {
+            if (cursor.moveToFirst()) {
+                int index = cursor.getColumnIndex(StockQuoteContract.StatusEntry.COLUMN_STATUS);
+                int status = cursor.getInt(index);
+                if(StockQuoteContract.StatusEntry.STATUS_UPDATING == status) {
+
+                } else {
+
+                }
+            }
+            mSwipeRefreshLayout.setRefreshing(false);
         }
-        mSwipeRefreshLayout.setRefreshing(false);
-        mCursorAdapter.swapCursor(data);
+
+
     }
 
     @Override

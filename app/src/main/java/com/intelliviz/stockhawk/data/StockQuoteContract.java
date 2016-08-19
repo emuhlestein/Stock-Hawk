@@ -12,6 +12,7 @@ public class StockQuoteContract {
     public static final Uri BASE_CONTENT_URI = Uri.parse("content://" + CONTENT_AUTHORITY);
 
     public static final String PATH_QUOTES = "quotes";
+    public static final String PATH_STATUS = "status";
 
     // An account type, in the form of a domain name
     public static final String ACCOUNT_TYPE = "query.yahooapis.com";
@@ -34,5 +35,20 @@ public class StockQuoteContract {
         public static final String COLUMN_CREATED = "created";
         public static final String COLUMN_ISUP = "is_up";
         public static final String COLUMN_ISCURRENT = "is_current";
+    }
+
+    public static final class StatusEntry implements BaseColumns {
+        public static final Uri CONTENT_URI = BASE_CONTENT_URI.buildUpon().appendPath(PATH_STATUS).build();
+        public static final int STATUS_UPDATED = 0;
+        public static final int STATUS_UPDATING = 1;
+        public static final int STATUS_ERROR = 2;
+
+        public static final String CONTENT_TYPE =
+                ContentResolver.CURSOR_DIR_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_STATUS;
+        public static final String CONTENT_ITEM_TYPE =
+                ContentResolver.CURSOR_ITEM_BASE_TYPE + "/" + CONTENT_AUTHORITY + "/" + PATH_STATUS;
+
+        public static final String TABLE_NAME = PATH_STATUS;
+        public static final String COLUMN_STATUS = "status";
     }
 }

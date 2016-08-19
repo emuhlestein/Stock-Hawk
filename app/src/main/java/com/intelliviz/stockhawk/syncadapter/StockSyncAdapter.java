@@ -73,14 +73,17 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         String getResponse;
         String data;
 
-        if(command.equals("update")) {
-            Cursor cursor = mContentResolver.query(StockQuoteContract.QuotesEntry.CONTENT_URI,
-                    new String[]{StockQuoteContract.QuotesEntry.COLUMN_SYMBOL}, null,
-                    null, null);
-            int count = cursor.getCount();
-            Log.d(TAG, "Count: " + count);
-            if (cursor == null || cursor.getCount() == 0) {
-                // add some default stocks
+        Utils.updateSyncStatus(getContext(), StockQuoteContract.StatusEntry.STATUS_UPDATING);
+
+        try {
+            if (command.equals("update")) {
+                Cursor cursor = mContentResolver.query(StockQuoteContract.QuotesEntry.CONTENT_URI,
+                        new String[]{StockQuoteContract.QuotesEntry.COLUMN_SYMBOL}, null,
+                        null, null);
+                int count = cursor.getCount();
+                Log.d(TAG, "Count: " + count);
+                if (cursor == null || cursor.getCount() == 0) {
+                    // add some default stocks
 /*
                 try {
                     // Base URL for the Yahoo query
@@ -104,18 +107,18 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                         + "org%2Falltableswithkeys&callback=");
 */
 
-                ArrayList<String> stockArray = new ArrayList<>();
-                stockArray.add("YHOO");
-                stockArray.add("AAPL");
-                stockArray.add("GOOG");
-                stockArray.add("MSFT");
-                urlString = Utils.buildURL(stockArray);
+                    ArrayList<String> stockArray = new ArrayList<>();
+                    stockArray.add("YHOO");
+                    stockArray.add("AAPL");
+                    stockArray.add("GOOG");
+                    stockArray.add("MSFT");
+                    urlString = Utils.buildURL(stockArray);
 
-                //urlString = urlStringBuilder.toString();
-                data = loadDataFromUrl(urlString);
-                if(data != null) {
-                    //Utils.addStocksToDB(getContext(), data);
-                }
+                    //urlString = urlStringBuilder.toString();
+                    data = loadDataFromUrl(urlString);
+                    if (data != null) {
+                        //Utils.addStocksToDB(getContext(), data);
+                    }
                 /*
                 if (data != null) {
                     ArrayList stockList = Utils.quoteJsonToContentVals(data);
@@ -134,7 +137,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                     }
                 }
                 */
-            } else if (cursor != null) {
+                } else if (cursor != null) {
                 /*
                 try{
                     // Base URL for the Yahoo query
@@ -146,14 +149,14 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 }
                 */
 
-                ArrayList<String> stockArray = new ArrayList<>();
-                DatabaseUtils.dumpCursor(cursor);
-                cursor.moveToFirst();
-                for (int i = 0; i < cursor.getCount(); i++) {
-                    stockArray.add(cursor.getString(cursor.getColumnIndex("symbol")));
-                    cursor.moveToNext();
-                }
-                urlString = Utils.buildURL(stockArray);
+                    ArrayList<String> stockArray = new ArrayList<>();
+                    DatabaseUtils.dumpCursor(cursor);
+                    cursor.moveToFirst();
+                    for (int i = 0; i < cursor.getCount(); i++) {
+                        stockArray.add(cursor.getString(cursor.getColumnIndex("symbol")));
+                        cursor.moveToNext();
+                    }
+                    urlString = Utils.buildURL(stockArray);
                 /*
                 mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
                 try {
@@ -167,22 +170,22 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                         */
 
 
-                //urlString = urlStringBuilder.toString();
-                data = loadDataFromUrl(urlString);
-                if (data != null) {
-                    try {
-                        Utils.updateStocks(getContext(), data);
-                    } catch (JSONException e) {
-                        e.printStackTrace();
-                        setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
-                        return;
-                    }
-                    //ArrayList<ContentProviderOperation> stockList = Utils.quoteJsonToContentVals(data);
+                    //urlString = urlStringBuilder.toString();
+                    data = loadDataFromUrl(urlString);
+                    if (data != null) {
+                        try {
+                            Utils.updateStocks(getContext(), data);
+                        } catch (JSONException e) {
+                            e.printStackTrace();
+                            setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
+                            return;
+                        }
+                        //ArrayList<ContentProviderOperation> stockList = Utils.quoteJsonToContentVals(data);
 
-                    //ContentValues contentValues = new ContentValues();
-                    //contentValues.put(StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT, 0);
-                    //mContentResolver.update(StockQuoteContract.QuotesEntry.CONTENT_URI, contentValues,
-                    //       null, null);
+                        //ContentValues contentValues = new ContentValues();
+                        //contentValues.put(StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT, 0);
+                        //mContentResolver.update(StockQuoteContract.QuotesEntry.CONTENT_URI, contentValues,
+                        //       null, null);
 /*
                     try {
                         mContentResolver.applyBatch(StockQuoteContract.CONTENT_AUTHORITY, stockList);
@@ -192,18 +195,18 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                         e.printStackTrace();
                     }
 */
+                    }
                 }
-            }
-            cursor.close();
-        } else if(command.equals("add")) {
-            String symbol = extras.getString(EXTRA_STOCK, "update");
-            Cursor cursor = Utils.getStock(getContext(), symbol);
+                cursor.close();
+            } else if (command.equals("add")) {
+                String symbol = extras.getString(EXTRA_STOCK, "update");
+                Cursor cursor = Utils.getStock(getContext(), symbol);
 
 
-            if(cursor == null || cursor.getCount() == 0 ) {
-                ArrayList<String> stockArray = new ArrayList<>();
-                stockArray.add(symbol);
-                urlString = Utils.buildURL(stockArray);
+                if (cursor == null || cursor.getCount() == 0) {
+                    ArrayList<String> stockArray = new ArrayList<>();
+                    stockArray.add(symbol);
+                    urlString = Utils.buildURL(stockArray);
                 /*
                 try {
                     // Base URL for the Yahoo query
@@ -224,26 +227,26 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                 urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
                         + "org%2Falltableswithkeys&callback=");
                         */
-                //urlString = urlStringBuilder.toString();
-                data = loadDataFromUrl(urlString);
-                try {
-                    String result = Utils.addStocksToDB(getContext(), data);
-                    Utils.updateStocks(this.getContext());
-                    if(result == null) {
-                        // stock not found
-                        setLocationStatus(getContext(), LOCATION_STATUS_STOCK_NOT_FOUND);
+                    //urlString = urlStringBuilder.toString();
+                    data = loadDataFromUrl(urlString);
+                    try {
+                        String result = Utils.addStocksToDB(getContext(), data);
+                        Utils.updateStocks(this.getContext());
+                        if (result == null) {
+                            // stock not found
+                            setLocationStatus(getContext(), LOCATION_STATUS_STOCK_NOT_FOUND);
+                        }
+                    } catch (JSONException e) {
+                        e.printStackTrace();
+                        setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
+                        return;
                     }
-                } catch (JSONException e) {
-                    e.printStackTrace();
-                    setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
-                    return;
-                }
 
-                AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getContext());
-                ComponentName appWidget = new ComponentName(getContext(), WidgetProvider.class);
-                int[] appWidgetIds = appWidgetManager.getAppWidgetIds(appWidget);
+                    AppWidgetManager appWidgetManager = AppWidgetManager.getInstance(getContext());
+                    ComponentName appWidget = new ComponentName(getContext(), WidgetProvider.class);
+                    int[] appWidgetIds = appWidgetManager.getAppWidgetIds(appWidget);
 
-                appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.collectionWidgetListView);
+                    appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.collectionWidgetListView);
                 /*
                 try {
                     mContentResolver.applyBatch(StockQuoteContract.CONTENT_AUTHORITY,
@@ -254,11 +257,11 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                     e.printStackTrace();
                 }
                 */
-            } else {
+                } else {
 
-                cursor.close();
+                    cursor.close();
+                }
             }
-        }
 
 
 
@@ -299,6 +302,9 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
 
 
 */
+        } finally {
+            Utils.updateSyncStatus(getContext(), StockQuoteContract.StatusEntry.STATUS_UPDATED);
+        }
         setLocationStatus(getContext(), LOCATION_STATUS_OK);
     }
 
