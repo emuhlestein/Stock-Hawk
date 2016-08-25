@@ -70,7 +70,7 @@ public class Utils {
         return cursor;
     }
 
-    public static String addStock(Context context, String symbol, String bidPrice, String change, int isUp, String percentChange){
+    public static String addStock(Context context, String symbol, String bidPrice, String change, int isUp, String percentChange) {
         ContentValues values = new ContentValues();
         values.put(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL, symbol);
         values.put(StockQuoteContract.QuotesEntry.COLUMN_BID_PRICE, bidPrice);
@@ -267,10 +267,10 @@ public class Utils {
         try {
             String change = jsonObject.getString("Change");
             int errCode = 0;
-            if(jsonObject.has("cod")) {
+            if (jsonObject.has("cod")) {
                 errCode = jsonObject.getInt("cod");
             }
-            if(change.equals("null")) {
+            if (change.equals("null")) {
                 return null;
             }
             String symbol = jsonObject.getString("symbol");
@@ -283,7 +283,7 @@ public class Utils {
             } else {
                 isUp = 1;
             }
-            String id = addStock(context, symbol, bidPrice, chg,  isUp, percentChange);
+            String id = addStock(context, symbol, bidPrice, chg, isUp, percentChange);
             return id;
         } catch (JSONException e) {
             e.printStackTrace();
@@ -304,7 +304,7 @@ public class Utils {
             } else {
                 isUp = 1;
             }
-            int id = updateStock(context, symbol, bidPrice, chg,  isUp, percentChange);
+            int id = updateStock(context, symbol, bidPrice, chg, isUp, percentChange);
             return id;
         } catch (JSONException e) {
             e.printStackTrace();
@@ -312,7 +312,7 @@ public class Utils {
         return 0;
     }
 
-    public static int updateStock(Context context, String symbol, String bidPrice, String change, int isUp, String percentChange){
+    public static int updateStock(Context context, String symbol, String bidPrice, String change, int isUp, String percentChange) {
         ContentValues values = new ContentValues();
         values.put(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL, symbol);
         values.put(StockQuoteContract.QuotesEntry.COLUMN_BID_PRICE, bidPrice);
@@ -340,7 +340,8 @@ public class Utils {
     }
 
     @SuppressWarnings("ResourceType")
-    public static @StockSyncAdapter.LocationStatus
+    public static
+    @StockSyncAdapter.LocationStatus
     int getLoctionStatus(Context context) {
         return PreferenceManager.getDefaultSharedPreferences(context)
                 .getInt(context.getString(R.string.pref_location_status_key), StockSyncAdapter.LOCATION_STATUS_UNKNOWN);

@@ -2,6 +2,7 @@ package com.intelliviz.stockhawk.ui;
 
 import android.accounts.Account;
 import android.accounts.AccountManager;
+import android.app.Activity;
 import android.content.AsyncQueryHandler;
 import android.content.ContentResolver;
 import android.content.Context;
@@ -9,7 +10,6 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.v4.app.Fragment;
@@ -17,10 +17,11 @@ import android.support.v4.app.LoaderManager;
 import android.support.v4.content.CursorLoader;
 import android.support.v4.content.Loader;
 import android.support.v4.widget.SwipeRefreshLayout;
+import android.support.v7.app.ActionBar;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.helper.ItemTouchHelper;
-import android.text.InputType;
 import android.util.Log;
 import android.view.Gravity;
 import android.view.LayoutInflater;
@@ -29,13 +30,11 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.afollestad.materialdialogs.MaterialDialog;
 import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
 import com.intelliviz.stockhawk.rest.QuoteCursorAdapter;
 import com.intelliviz.stockhawk.rest.RecyclerViewItemClickListener;
 import com.intelliviz.stockhawk.rest.Utils;
-import com.intelliviz.stockhawk.service.StockIntentService;
 import com.intelliviz.stockhawk.syncadapter.StockSyncAdapter;
 import com.intelliviz.stockhawk.touch_helper.SimpleItemTouchHelperCallback;
 import com.melnykov.fab.FloatingActionButton;
@@ -47,18 +46,17 @@ import butterknife.ButterKnife;
 
 public class StockListFragment extends Fragment implements
         LoaderManager.LoaderCallbacks<Cursor>, OnLoadStockListener, SharedPreferences.OnSharedPreferenceChangeListener {
+    public static final int REQUEST_ITEM = 0;
     private static final String PREF_NEED_TO_SYNC = "need_to_sync";
     private static final String TAG = StockListFragment.class.getSimpleName();
     private CharSequence mTitle;
-    private Intent mServiceIntent;
     private static final int STOCK_LOADER_ID = 0;
     public static final int STATUS_LOADER_ID = 1;
     private QuoteCursorAdapter mCursorAdapter;
     private ItemTouchHelper mItemTouchHelper;
-    private boolean mIsConnected;
+    //private boolean mIsConnected;
     private Account mAccount;
     private OnStockSelectListener mListener;
-
 
     @Bind(R.id.empty_view) TextView mEmptyView;
     @Bind(R.id.recycler_view) RecyclerView mRecyclerView;
@@ -93,35 +91,11 @@ public class StockListFragment extends Fragment implements
         ConnectivityManager cm =
                 (ConnectivityManager) getContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
-        NetworkInfo activeNetwork = cm.getActiveNetworkInfo();
-        mIsConnected = activeNetwork != null && activeNetwork.isConnectedOrConnecting();
-
-        // The intent service is for executing immediate pulls from the Yahoo API
-        // GCMTaskService can only schedule tasks, they cannot execute immediately
-        mServiceIntent = new Intent(getContext(), StockIntentService.class);
-
-        //StockQueryHandler stockQueryHandler = new StockQueryHandler(getContext().getContentResolver(), this);
-        //Uri uri = QuoteProvider.Quotes.CONTENT_URI;
-        //stockQueryHandler.startQuery(1, null, uri, new String[]{"Distinct " + QuoteColumns.SYMBOL}, null, null, null);
-
         SharedPreferences sp = PreferenceManager.getDefaultSharedPreferences(getActivity());
         // Run the initialize task service so that some stocks appear upon an empty database
         boolean needToSync = true; //sp.getBoolean(PREF_NEED_TO_SYNC, true);
         if(needToSync) {
             syncStockData();
-            //SharedPreferences.Editor editor= sp.edit();
-            //editor.putBoolean(PREF_NEED_TO_SYNC, false);
-            //editor.apply();
-        }
-
-        mServiceIntent.putExtra("tag", "init");
-        if (mIsConnected) {
-            //getContext().startService(mServiceIntent);
-            mEmptyView.setVisibility(View.GONE);
-            mRecyclerView.setVisibility(View.VISIBLE);
-        } else {
-            mEmptyView.setVisibility(View.VISIBLE);
-            mRecyclerView.setVisibility(View.GONE);
         }
 
         mRecyclerView.setLayoutManager(new LinearLayoutManager(getContext()));
@@ -139,7 +113,6 @@ public class StockListFragment extends Fragment implements
                             int symbolIndex = cursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
                             symbol = cursor.getString(symbolIndex);
                         }
-                        Toast.makeText(getContext(), "Clicked", Toast.LENGTH_SHORT ).show();
                         new StockHistoryAsyncTask(mListener, symbol).execute("");
                     }
                 }));
@@ -149,36 +122,11 @@ public class StockListFragment extends Fragment implements
         mFab.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mIsConnected) {
-                    new MaterialDialog.Builder(getContext()).title(R.string.symbol_search)
-                            .content(R.string.content_test)
-                            .inputType(InputType.TYPE_CLASS_TEXT)
-                            .input(R.string.input_hint, R.string.input_prefill, new MaterialDialog.InputCallback() {
-                                @Override
-                                public void onInput(MaterialDialog dialog, CharSequence input) {
-                                    // On FAB click, receive user input. Make sure the stock doesn't already exist
-                                    // in the DB and proceed accordingly
-                                    Cursor c = getContext().getContentResolver().query(StockQuoteContract.QuotesEntry.CONTENT_URI,
-                                            new String[]{StockQuoteContract.QuotesEntry.COLUMN_SYMBOL}, StockQuoteContract.QuotesEntry.COLUMN_SYMBOL + "= ?",
-                                            new String[]{input.toString()}, null);
-                                    if (c.getCount() != 0) {
-                                        Toast toast =
-                                                Toast.makeText(getContext(), "This stock is already saved!",
-                                                        Toast.LENGTH_LONG);
-                                        toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
-                                        toast.show();
-                                        return;
-                                    } else {
-                                        // Add the stock to DB
-                                        //mServiceIntent.putExtra("tag", "add");
-                                        //mServiceIntent.putExtra("symbol", input.toString());
-                                        //getContext().startService(mServiceIntent);
-                                        String symbol = input.toString().toUpperCase();
-                                        addStock(symbol);
-                                    }
-                                }
-                            })
-                            .show();
+                if (Utils.isNetworkAvailable(getContext())) {
+                    SimpleTextDialog dialog;
+                    dialog = SimpleTextDialog.newInstance("Add a Stock", "", "Symbol", false);
+                    dialog.setTargetFragment(StockListFragment.this, REQUEST_ITEM);
+                    dialog.show(getFragmentManager(), "Dial1");
                 } else {
                     networkToast();
                 }
@@ -206,6 +154,12 @@ public class StockListFragment extends Fragment implements
                 Utils.forceSyncUpdate(getContext());
             }
         });
+
+        AppCompatActivity activity = (AppCompatActivity)getActivity();
+        ActionBar actionBar = activity.getSupportActionBar();
+        if(actionBar != null) {
+            actionBar.setDisplayHomeAsUpEnabled(false);
+        }
 
         return view;
     }
@@ -251,13 +205,6 @@ public class StockListFragment extends Fragment implements
             if (cursor.moveToFirst()) {
                 mEmptyView.setVisibility(View.GONE);
                 mRecyclerView.setVisibility(View.VISIBLE);
-                int index = cursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
-                String str = cursor.getString(index);
-                while (cursor.moveToNext()) {
-                    index = cursor.getColumnIndex(StockQuoteContract.QuotesEntry.COLUMN_SYMBOL);
-                    str = cursor.getString(index);
-                    Log.d(TAG, "Stock: " + str);
-                }
             } else {
                 mEmptyView.setVisibility(View.VISIBLE);
                 mRecyclerView.setVisibility(View.GONE);
@@ -276,8 +223,6 @@ public class StockListFragment extends Fragment implements
             }
             mSwipeRefreshLayout.setRefreshing(false);
         }
-
-
     }
 
     @Override
@@ -366,7 +311,7 @@ public class StockListFragment extends Fragment implements
         if(key.equals(getString(R.string.pref_location_status_key))) {
             @StockSyncAdapter.LocationStatus int location = Utils.getLoctionStatus(getContext());
             if(location == StockSyncAdapter.LOCATION_STATUS_STOCK_NOT_FOUND) {
-                Toast.makeText(getContext(), "Stock was not found", Toast.LENGTH_SHORT).show();
+                Toast.makeText(getContext(), R.string.no_stock_found, Toast.LENGTH_SHORT).show();
             } else {
                 updateEmptyView();
             }
@@ -375,7 +320,7 @@ public class StockListFragment extends Fragment implements
 
     private void updateEmptyView() {
         if(mCursorAdapter.getItemCount() == 0) {
-            int message = R.string.no_stock_info;
+            int message;
             @StockSyncAdapter.LocationStatus int location = Utils.getLoctionStatus(getContext());
             switch(location) {
                 case StockSyncAdapter.LOCATION_STATUS_SERVER_DOWN:
@@ -387,6 +332,8 @@ public class StockListFragment extends Fragment implements
                 default:
                     if(!Utils.isNetworkAvailable(getContext())) {
                         message = R.string.no_stock_info_no_network;
+                    } else {
+                        message = R.string.no_stock_info_add_stock;
                     }
             }
 
@@ -394,7 +341,32 @@ public class StockListFragment extends Fragment implements
         }
     }
 
-    private class StockQueryHandler extends AsyncQueryHandler {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, Intent data) {
+        if(requestCode == REQUEST_ITEM) {
+            if (resultCode == Activity.RESULT_OK) {
+                String symbol = data.getStringExtra(SimpleTextDialog.EXTRA_TEXT);
+                Cursor c = getContext().getContentResolver().query(StockQuoteContract.QuotesEntry.CONTENT_URI,
+                        new String[]{StockQuoteContract.QuotesEntry.COLUMN_SYMBOL}, StockQuoteContract.QuotesEntry.COLUMN_SYMBOL + "= ?",
+                        new String[]{symbol.toString()}, null);
+                if (c.getCount() != 0) {
+                    Toast toast =
+                            Toast.makeText(getContext(), getActivity().getResources().getString(R.string.stock_already_saved),
+                                    Toast.LENGTH_LONG);
+                    toast.setGravity(Gravity.CENTER, Gravity.CENTER, 0);
+                    toast.show();
+                    return;
+                } else {
+                    // Add the stock to DB
+                    symbol = symbol.toUpperCase();
+                    addStock(symbol);
+                }
+            }
+        }
+
+    }
+
+    private static class StockQueryHandler extends AsyncQueryHandler {
 
         private WeakReference<OnLoadStockListener> mListener;
 

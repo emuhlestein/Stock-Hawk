@@ -50,7 +50,6 @@ public class MyStocksActivity extends AppCompatActivity implements StockListFrag
         mTitle = getTitle();
     }
 
-
     @Override
     public void onResume() {
         super.onResume();

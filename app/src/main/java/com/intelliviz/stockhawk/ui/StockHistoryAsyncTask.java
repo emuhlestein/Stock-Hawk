@@ -14,7 +14,10 @@ import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.net.URLEncoder;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 /**
  * Created by edm on 7/20/2016.
@@ -34,14 +37,23 @@ public class StockHistoryAsyncTask extends AsyncTask<String, Void, String> {
         int len = params.length;
         ArrayList<String> list = null;
         if(len >= 0) {
+            DateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
+            Calendar cal = Calendar.getInstance();
+            String endDate = dateFormat.format(cal.getTime());
+
+            cal = Calendar.getInstance();
+            cal.add(Calendar.DAY_OF_MONTH, -7);
+            String startDate = dateFormat.format(cal.getTime());
             StringBuilder urlStringBuilder = new StringBuilder();
             String query = "select * from yahoo.finance.historicaldata where symbol in (\"YHOO\") and startDate = \'2016-07-11\' and endDate = \'2016-07-19\'";
             try {
                 // Base URL for the Yahoo query
                 urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
                 urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.historicaldata ", "UTF-8"));
-                urlStringBuilder.append(URLEncoder.encode("where symbol = \"YHOO\" ", "UTF-8"));
-                urlStringBuilder.append(URLEncoder.encode("and startDate = \"2016-07-11\" and endDate = \"2016-07-19\" ", "UTF-8"));
+                urlStringBuilder.append(URLEncoder.encode("where symbol = ", "UTF-8"));
+                urlStringBuilder.append(URLEncoder.encode("\"" + mSymbol + "\"", "UTF-8"));
+                urlStringBuilder.append(URLEncoder.encode("and startDate = \""+startDate+"\" and ", "UTF-8"));
+                urlStringBuilder.append(URLEncoder.encode("endDate = \""+endDate+"\" ", "UTF-8"));
                 urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables.org%2Falltableswithkeys&callback=");
             } catch (UnsupportedEncodingException e) {
                 e.printStackTrace();

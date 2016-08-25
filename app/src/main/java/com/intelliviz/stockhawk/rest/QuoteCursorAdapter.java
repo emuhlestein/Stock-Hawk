@@ -13,7 +13,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import com.intelliviz.stockhawk.R;
 import com.intelliviz.stockhawk.data.StockQuoteContract;
@@ -32,7 +31,6 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
 
     private static Context mContext;
     private static Typeface robotoLight;
-    private boolean isPercent;
 
     public QuoteCursorAdapter(Context context, Cursor cursor) {
         super(context, cursor);
@@ -126,7 +124,6 @@ public class QuoteCursorAdapter extends CursorRecyclerViewAdapter<QuoteCursorAda
 
         @Override
         public void onClick(View v) {
-            Toast.makeText(mContext, "clicked", Toast.LENGTH_SHORT).show();
         }
     }
 }

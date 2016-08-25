@@ -1,0 +1,33 @@
+<android.support.v7.widget.GridLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    app:columnCount="3"
+    app:rowCount="2"
+    app:orientation="horizontal">
+
+    <TextView
+        android:text="@string/name_text"
+        android:textSize="18dp"
+        android:layout_margin="16dp"
+        android:id="@+id/editTextLabel"/>
+
+    <EditText
+        android:width="200dp"
+        app:layout_columnSpan="2"
+        android:id="@+id/editTextView"/>
+
+    <Button
+        android:id="@+id/okSimpleButton"
+        app:layout_column="1"
+        android:text="@string/okButton"
+        android:textSize="16sp"/>
+
+    <Button
+        android:id="@+id/cancelSimpleButton"
+        android:text="@string/cancelButton"
+        app:layout_gravity="fill_horizontal|right"
+        android:textSize="16sp"/>
+
+</android.support.v7.widget.GridLayout>

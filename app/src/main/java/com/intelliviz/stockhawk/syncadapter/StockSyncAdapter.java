@@ -72,83 +72,21 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         String urlString;
         String getResponse;
         String data;
+        Cursor cursor = null;
 
         Utils.updateSyncStatus(getContext(), StockQuoteContract.StatusEntry.STATUS_UPDATING);
 
         try {
             if (command.equals("update")) {
-                Cursor cursor = mContentResolver.query(StockQuoteContract.QuotesEntry.CONTENT_URI,
+                cursor = mContentResolver.query(StockQuoteContract.QuotesEntry.CONTENT_URI,
                         new String[]{StockQuoteContract.QuotesEntry.COLUMN_SYMBOL}, null,
                         null, null);
                 int count = cursor.getCount();
                 Log.d(TAG, "Count: " + count);
-                if (cursor == null || cursor.getCount() == 0) {
-                    // add some default stocks
-/*
-                try {
-                    // Base URL for the Yahoo query
-                    urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
-                    urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
-                            + "in (", "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-                // Init task. Populates DB with quotes for the symbols seen below
-                try {
-                    urlStringBuilder.append(
-                            URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-                // finalize the URL for the API query.
-                urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-                        + "org%2Falltableswithkeys&callback=");
-*/
-
-                    ArrayList<String> stockArray = new ArrayList<>();
-                    stockArray.add("YHOO");
-                    stockArray.add("AAPL");
-                    stockArray.add("GOOG");
-                    stockArray.add("MSFT");
-                    urlString = Utils.buildURL(stockArray);
-
-                    //urlString = urlStringBuilder.toString();
-                    data = loadDataFromUrl(urlString);
-                    if (data != null) {
-                        //Utils.addStocksToDB(getContext(), data);
+                if (cursor != null) {
+                    if(count == 0) {
+                        return;
                     }
-                /*
-                if (data != null) {
-                    ArrayList stockList = Utils.quoteJsonToContentVals(data);
-
-                    ContentValues contentValues = new ContentValues();
-                    contentValues.put(StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT, 0);
-                    mContentResolver.update(StockQuoteContract.QuotesEntry.CONTENT_URI, contentValues,
-                            null, null);
-
-                    try {
-                        mContentResolver.applyBatch(StockQuoteContract.CONTENT_AUTHORITY, stockList);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    } catch (OperationApplicationException e) {
-                        e.printStackTrace();
-                    }
-                }
-                */
-                } else if (cursor != null) {
-                /*
-                try{
-                    // Base URL for the Yahoo query
-                    urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
-                    urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
-                            + "in (", "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-                */
-
                     ArrayList<String> stockArray = new ArrayList<>();
                     DatabaseUtils.dumpCursor(cursor);
                     cursor.moveToFirst();
@@ -157,20 +95,7 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                         cursor.moveToNext();
                     }
                     urlString = Utils.buildURL(stockArray);
-                /*
-                mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
-                try {
-                    urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-                // finalize the URL for the API query.
-                urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-                        + "org%2Falltableswithkeys&callback=");
-                        */
 
-
-                    //urlString = urlStringBuilder.toString();
                     data = loadDataFromUrl(urlString);
                     if (data != null) {
                         try {
@@ -180,54 +105,19 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                             setLocationStatus(getContext(), LOCATION_STATUS_SERVER_INVALID);
                             return;
                         }
-                        //ArrayList<ContentProviderOperation> stockList = Utils.quoteJsonToContentVals(data);
-
-                        //ContentValues contentValues = new ContentValues();
-                        //contentValues.put(StockQuoteContract.QuotesEntry.COLUMN_ISCURRENT, 0);
-                        //mContentResolver.update(StockQuoteContract.QuotesEntry.CONTENT_URI, contentValues,
-                        //       null, null);
-/*
-                    try {
-                        mContentResolver.applyBatch(StockQuoteContract.CONTENT_AUTHORITY, stockList);
-                    } catch (RemoteException e) {
-                        e.printStackTrace();
-                    } catch (OperationApplicationException e) {
-                        e.printStackTrace();
-                    }
-*/
                     }
                 }
                 cursor.close();
             } else if (command.equals("add")) {
                 String symbol = extras.getString(EXTRA_STOCK, "update");
-                Cursor cursor = Utils.getStock(getContext(), symbol);
+                cursor = Utils.getStock(getContext(), symbol);
 
 
                 if (cursor == null || cursor.getCount() == 0) {
                     ArrayList<String> stockArray = new ArrayList<>();
                     stockArray.add(symbol);
                     urlString = Utils.buildURL(stockArray);
-                /*
-                try {
-                    // Base URL for the Yahoo query
-                    urlStringBuilder.append("https://query.yahooapis.com/v1/public/yql?q=");
-                    urlStringBuilder.append(URLEncoder.encode("select * from yahoo.finance.quotes where symbol "
-                            + "in (", "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
 
-                try {
-                    urlStringBuilder.append(URLEncoder.encode("\"" + symbol + "\")", "UTF-8"));
-                } catch (UnsupportedEncodingException e) {
-                    e.printStackTrace();
-                }
-
-                // finalize the URL for the API query.
-                urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-                        + "org%2Falltableswithkeys&callback=");
-                        */
-                    //urlString = urlStringBuilder.toString();
                     data = loadDataFromUrl(urlString);
                     try {
                         String result = Utils.addStocksToDB(getContext(), data);
@@ -247,62 +137,15 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
                     int[] appWidgetIds = appWidgetManager.getAppWidgetIds(appWidget);
 
                     appWidgetManager.notifyAppWidgetViewDataChanged(appWidgetIds, R.id.collectionWidgetListView);
-                /*
-                try {
-                    mContentResolver.applyBatch(StockQuoteContract.CONTENT_AUTHORITY,
-                            Utils.quoteJsonToContentVals(data));
-                } catch (RemoteException e) {
-                    e.printStackTrace();
-                } catch (OperationApplicationException e) {
-                    e.printStackTrace();
-                }
-                */
                 } else {
 
                     cursor.close();
                 }
             }
-
-
-
-/*
-        if (cursor == null || cursor.getCount() == 0) {
-            // Init task. Populates DB with quotes for the symbols seen below
-            try {
-                urlStringBuilder.append(
-                        URLEncoder.encode("\"YHOO\",\"AAPL\",\"GOOG\",\"MSFT\")", "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        } else if(cursor != null) {
-            cursor.moveToFirst();
-            int count = cursor.getCount();
-            for (int i = 0; i < cursor.getCount(); i++) {
-                mStoredSymbols.append("\"" +
-                        cursor.getString(cursor.getColumnIndex("symbol")) + "\",");
-                cursor.moveToNext();
-            }
-            mStoredSymbols.replace(mStoredSymbols.length() - 1, mStoredSymbols.length(), ")");
-            try {
-                urlStringBuilder.append(URLEncoder.encode(mStoredSymbols.toString(), "UTF-8"));
-            } catch (UnsupportedEncodingException e) {
-                e.printStackTrace();
-            }
-        }
-
-        if(cursor != null) {
-            cursor.close();
-        }
-
-        String s = "String query = \"select * from yahoo.finance.historicaldata where symbol = \\'\" + msymbol + \"\\' and startDate = \\'2016-07-11\\' and endDate = \\'2016-07-19\\'\";";
-
-        // finalize the URL for the API query.
-        urlStringBuilder.append("&format=json&diagnostics=true&env=store%3A%2F%2Fdatatables."
-                + "org%2Falltableswithkeys&callback=");
-
-
-*/
         } finally {
+            if(cursor != null) {
+                cursor.close();
+            }
             Utils.updateSyncStatus(getContext(), StockQuoteContract.StatusEntry.STATUS_UPDATED);
         }
         setLocationStatus(getContext(), LOCATION_STATUS_OK);
@@ -320,7 +163,6 @@ public class StockSyncAdapter extends AbstractThreadedSyncAdapter {
         if(url == null) {
             return null;
         }
-
 
         HttpURLConnection urlConnection = null;
         BufferedReader reader = null;
